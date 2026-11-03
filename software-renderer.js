@@ -1,6 +1,6 @@
 // Canvas painter fallback for browsers where GPU/WebGL is unavailable.
 // Uses the same real 3D scene, camera, geometry and gameplay as the GPU renderer.
-import * as THREE from './vendor/three.module.js';
+import * as THREE from './three.module.js';
 export class SoftwareRenderer{
  constructor({canvas}){this.domElement=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.shadowMap={};this.ratio=1;this.textureCache=new WeakMap();this.faces=[];this.tmp=new THREE.Matrix4();this.point=new THREE.Vector3();this.world=new THREE.Vector3();this.p1=new THREE.Vector3();this.p2=new THREE.Vector3();this.n=new THREE.Vector3();this.v1=new THREE.Vector3();this.v2=new THREE.Vector3();this.sun=new THREE.Vector3(-.4,.85,.5).normalize()}
  setSize(w,h){this.w=w;this.h=h;this.domElement.width=Math.round(w*this.ratio);this.domElement.height=Math.round(h*this.ratio)}

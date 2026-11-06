@@ -1,0 +1,9 @@
+const gate=document.querySelector('#campusGate'),day=document.querySelector('#campusLight'),night=document.querySelector('#campusDark'),enter=document.querySelector('#campusEnter'),status=document.querySelector('#campusStatus');
+let booted=false,launching=false;
+function behindGate(value){document.querySelector('#menu').inert=value;document.querySelector('#audio').inert=value}
+behindGate(true);
+function setTheme(theme){gate.dataset.theme=theme;day.setAttribute('aria-pressed',String(theme==='light'));night.setAttribute('aria-pressed',String(theme==='dark'));document.querySelector('#campusTime').textContent=theme==='dark'?'الجامعة بعد الغروب':'ليلة ألعاب جديدة';try{localStorage.setItem('ijagCampusTheme',theme)}catch{}}
+let initial=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';try{initial=localStorage.getItem('ijagCampusTheme')||initial}catch{}setTheme(initial==='dark'?'dark':'light');day.onclick=()=>setTheme('light');night.onclick=()=>setTheme('dark');
+async function launch(){if(launching)return;launching=true;enter.disabled=true;status.textContent='جاري دخول اللعبة…';try{behindGate(false);if(!booted){document.querySelector('#loading').classList.remove('hidden');gate.classList.add('hidden');await import('./main.js');booted=true}else gate.classList.add('hidden')}catch(error){behindGate(true);gate.classList.remove('hidden');document.querySelector('#loading').classList.add('hidden');status.textContent='تعذّر تحميل اللعبة. تأكدي من رفع جميع الملفات، ثم حدّثي الصفحة.';console.error(error)}finally{launching=false;enter.disabled=false}}
+enter.onclick=launch;document.querySelector('#campusBuilding').onclick=launch;
+document.querySelector('#campusReturn').onclick=()=>{behindGate(true);gate.classList.remove('hidden');status.textContent='اضغطي السهم فوق المبنى العلوي على اليسار لدخول اللعبة.';enter.focus()};

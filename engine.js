@@ -28,3 +28,27 @@ export function tickCorridor(state,dt){if(state.phase==='corridor')state.elapsed
 export function submitCorridorCode(state,code){if(state.phase!=='corridor')return 'ignored';if(String(code)!==state.code){state.wrong++;return 'wrong'}state.phase='transfer';return 'correct'}
 export function finishCorridorLift(state){if(state.phase!=='transfer')return false;state.phase='exitLobby';return true}
 export function leaveFinalLobby(state,x){if(state.phase!=='exitLobby'||x>.1)return false;state.phase='outside';return true}
+
+// Physical controls work with English and Arabic keyboard layouts alike.
+export function controlKey(event){const codes={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyE:'e',KeyP:'p',Space:' ',ShiftLeft:'shift',ShiftRight:'shift'};return codes[event.code]??event.key.toLowerCase()}
+export const LIFT_X=[.32,.50,.68];
+export function nearbyElevator(p){let nearest=-1,distance=.075;LIFT_X.forEach((x,i)=>{let d=Math.hypot(p.x-x,(p.y-.70)*.5625);if(d<distance){nearest=i;distance=d}});return nearest}
+export function nearCorridorLift(p){return Math.hypot(p.x-.86,(p.y-.70)*.5625)<.085}
+export function normalizeCode(value){return String(value).replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)).replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776))}
+
+const FLEE_POINTS=[{x:-5.5,z:6.6},{x:.1,z:6.7},{x:8.4,z:-1.1},{x:0,z:-5.8},{x:-6.3,z:-1},{x:8,z:6},{x:-1,z:1},{x:0,z:-2}];
+export function nearestWalkable(p){const connected=q=>walkable(q.x,q.z)&&(Math.hypot(q.x,q.z)<.6||path(q,{x:0,z:0}).length>0);if(connected(p))return{x:p.x,z:p.z};let candidates=[];for(let x=-10;x<=10;x+=.5)for(let z=-8;z<=8;z+=.5)if(walkable(x,z))candidates.push({x,z});candidates.sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z));return candidates.find(connected)}
+export function newFleeingCompanion(position,id){return{...nearestWalkable(position),id,route:[],target:null,replan:0,turn:0}}
+export function stepFleeingCompanion(body,threat,dt){
+ body.replan-=dt;
+ const reached=body.target&&Math.hypot(body.x-body.target.x,body.z-body.target.z)<.7;
+ const danger=Math.hypot(body.x-threat.x,body.z-threat.z)<2.5;
+ if(!body.route.length||reached||(danger&&body.replan<=0)){
+  const candidates=FLEE_POINTS.map((p,i)=>({...p,score:Math.hypot(p.x-threat.x,p.z-threat.z)-.18*Math.hypot(p.x-body.x,p.z-body.z)+Math.sin(i*2.7+body.id+body.turn)*1.2})).filter(p=>Math.hypot(p.x-body.x,p.z-body.z)>2).sort((a,b)=>b.score-a.score);
+  for(const target of candidates){const route=path(body,target);if(route.length){body.route=route;body.target=target;break}}
+  body.replan=.8+body.id*.025;body.turn++;
+ }
+ const before={x:body.x,z:body.z};let remaining=dt*(3.0+(body.id%3)*.12);
+ while(remaining>0&&body.route.length){const p=body.route[0],dx=p.x-body.x,dz=p.z-body.z,d=Math.hypot(dx,dz);if(d<.06){body.route.shift();continue}const step=Math.min(d,remaining);move(body,dx/d*step,dz/d*step);body.heading=Math.atan2(dx,dz);remaining-=step;if(Math.hypot(body.x-before.x,body.z-before.z)<.0001){body.route=[];break}}
+ return Math.hypot(body.x-before.x,body.z-before.z)>.0001;
+}

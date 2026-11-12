@@ -4,6 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check main.js && node --check engine.js && node --check elevator-level.js && node --check final-escape.js && node --check campus.js && node checks/engine-check.js && node checks/interaction-check.js"
+    "check": "node --check main.js && node --check engine.js && node --check elevator-level.js && node --check final-escape.js && node --check campus.js && node checks/engine-check.js && node checks/interaction-check.js && node --check part-two.js && node --check part-two-state.js && node checks/part-two-check.js && node --check elevator-cabin.js && node --check floor-three.js && node checks/floor-three-check.js && node --check part-three.js && node checks/part-three-check.js"
   }
 }
